@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: bank-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: bank_user
+      POSTGRES_PASSWORD: bank_password
+      POSTGRES_DB: core_banking
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U bank_user -d core_banking" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bank-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: bank-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bank-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bank-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
+  api:
+    build: .
+    container_name: bank-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/core_banking
+      - SPRING_DATASOURCE_USERNAME=bank_user
+      - SPRING_DATASOURCE_PASSWORD=bank_password
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
