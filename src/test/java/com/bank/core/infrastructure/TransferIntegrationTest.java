@@ -40,12 +40,14 @@ class TransferIntegrationTest {
     private AccountUseCase accountUseCase;
 
     @Container
+    @SuppressWarnings("resource")
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(DockerImageName.parse("postgres:15-alpine"))
             .withDatabaseName("core_banking_test")
             .withUsername("testuser")
             .withPassword("testpass");
 
     @Container
+    @SuppressWarnings("resource")
     static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
             .withExposedPorts(6379);
 
