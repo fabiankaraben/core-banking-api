@@ -1,7 +1,7 @@
 # System Specification: Core Banking API (Monolithic Edition)
 
 ## 1. Project Overview
-The Core Banking API is a robust, production-ready monolithic backend designed to handle financial transactions with high concurrency and strict data integrity. It demonstrates advanced enterprise patterns, asynchronous message routing, and precise financial calculations without relying on external Cloud Service Providers.
+The Core Banking API is a robust, monolithic backend designed to handle financial transactions with high concurrency and strict data integrity. It demonstrates advanced enterprise patterns, asynchronous message routing, and precise financial calculations without relying on external Cloud Service Providers.
 
 ## 2. Technology Stack
 
