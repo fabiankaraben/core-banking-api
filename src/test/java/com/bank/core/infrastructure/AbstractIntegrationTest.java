@@ -37,6 +37,7 @@ public abstract class AbstractIntegrationTest {
 
     /** PostgreSQL 16 container reused across all tests in a subclass. */
     @Container
+    @SuppressWarnings("resource")
     protected static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("postgres:16-alpine")
                     .withDatabaseName("banking_test")

@@ -57,12 +57,12 @@ The system strictly adheres to **Hexagonal Architecture (Ports and Adapters)**, 
 │  └──────────────────────────────────────────────────────────┘   │
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │                   Application Layer                       │   │
+│  │                   Application Layer                      │   │
 │  │   Use Cases (Commands/Queries)  ·  Ports (Interfaces)    │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │                Infrastructure Layer                       │   │
+│  │                Infrastructure Layer                      │   │
 │  │  Inbound: REST Controllers · @RabbitListener             │   │
 │  │  Outbound: JPA Adapters · Redis Adapter · AMQP Publisher │   │
 │  └──────────────────────────────────────────────────────────┘   │
@@ -301,6 +301,66 @@ All errors use a consistent envelope:
 | `409 Conflict` | Concurrent in-flight request for the same idempotency key, or optimistic lock failure |
 | `422 Unprocessable Entity` | Insufficient funds or blocked account |
 | `500 Internal Server Error` | Unexpected server-side error |
+
+---
+
+## Manual Testing (curl)
+
+Once the application is running via `docker compose up -d`, you can use these `curl` commands to test the core flows.
+
+### 1. Create a Source Account
+```bash
+curl -X POST http://localhost:8080/api/v1/accounts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "11111111-1111-1111-1111-111111111111",
+    "initialBalance": 1000.00,
+    "currencyCode": "USD"
+  }'
+```
+*(Copy the generated `id` from the response for the transfer)*
+
+### 2. Create a Destination Account
+```bash
+curl -X POST http://localhost:8080/api/v1/accounts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customerId": "22222222-2222-2222-2222-222222222222",
+    "initialBalance": 0.00,
+    "currencyCode": "USD"
+  }'
+```
+*(Copy the generated `id` from the response for the transfer)*
+
+### 3. Perform a Successful Transfer
+Replace `<SOURCE_ID>` and `<DEST_ID>` with the IDs from steps 1 and 2.
+```bash
+curl -X POST http://localhost:8080/api/v1/transfers \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: success-transfer-001" \
+  -d '{
+    "sourceAccountId": "<SOURCE_ID>",
+    "destinationAccountId": "<DEST_ID>",
+    "amount": 250.00,
+    "currencyCode": "USD"
+  }'
+```
+*(Expected response: `202 Accepted` with transfer details)*
+
+### 4. Attempt a Failed Transfer (Insufficient Funds)
+Using the same accounts, try to transfer more than the remaining balance (750.00).
+```bash
+curl -X POST http://localhost:8080/api/v1/transfers \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: failed-transfer-002" \
+  -d '{
+    "sourceAccountId": "<SOURCE_ID>",
+    "destinationAccountId": "<DEST_ID>",
+    "amount": 9000.00,
+    "currencyCode": "USD"
+  }'
+```
+*(Expected response: `422 Unprocessable Entity` - "Insufficient funds in account...")*
 
 ---
 
