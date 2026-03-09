@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.3</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.bank</groupId>
+    <artifactId>core-banking-api</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Core Banking API</name>
+    <description>
+        A robust, monolithic Core Banking API built with Java 21 and Spring Boot 3.
+        Demonstrates Hexagonal Architecture, CQRS, idempotency, transactional outbox,
+        async messaging via RabbitMQ, distributed caching via Redis, and observability
+        with Micrometer and Prometheus.
+    </description>
+
+    <properties>
+        <java.version>21</java.version>
+        <testcontainers.version>1.20.4</testcontainers.version>
+        <springdoc.version>2.4.0</springdoc.version>
+        <micrometer.version>1.12.3</micrometer.version>
+        <!--
+          Docker socket used by Testcontainers in integration tests.
+          Default is the standard Linux/CI path. On macOS with Docker Desktop,
+          override if needed: -Ddocker.host=unix:///Users/you/.docker/run/docker.sock
+          See README for Docker Desktop setup instructions.
+        -->
+        <docker.host>unix:///var/run/docker.sock</docker.host>
+    </properties>
+
+    <dependencies>
+
+        <!-- ======================================================= -->
+        <!-- Spring Boot Core                                        -->
+        <!-- ======================================================= -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- ======================================================= -->
+        <!-- Messaging: RabbitMQ                                     -->
+        <!-- ======================================================= -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
+        <!-- ======================================================= -->
+        <!-- Caching: Redis                                          -->
+        <!-- ======================================================= -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- ======================================================= -->
+        <!-- Database: PostgreSQL & Flyway                           -->
+        <!-- ======================================================= -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
+        <!-- ======================================================= -->
+        <!-- Observability: Micrometer + Prometheus                  -->
+        <!-- ======================================================= -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
+        <!-- ======================================================= -->
+        <!-- API Documentation: OpenAPI / Swagger UI                 -->
+        <!-- ======================================================= -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+
+        <!-- ======================================================= -->
+        <!-- Utilities                                               -->
+        <!-- ======================================================= -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- ======================================================= -->
+        <!-- Testing                                                 -->
+        <!-- ======================================================= -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.amqp</groupId>
+            <artifactId>spring-rabbit-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>rabbitmq</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Spring Boot Maven Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+            <!-- Maven Compiler Plugin: Java 21 with preview features disabled -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <annotationProcessorPaths/>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Surefire Plugin: unit tests only (excludes *IT classes) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*IT.java</exclude>
+                        <exclude>**/*ITCase.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Failsafe Plugin: integration tests (*IT classes, require Docker) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*IT.java</include>
+                        <include>**/*ITCase.java</include>
+                    </includes>
+                    <environmentVariables>
+                        <DOCKER_HOST>${docker.host}</DOCKER_HOST>
+                        <TESTCONTAINERS_RYUK_DISABLED>false</TESTCONTAINERS_RYUK_DISABLED>
+                    </environmentVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven Javadoc Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <show>private</show>
+                    <nohelp>true</nohelp>
+                    <failOnError>false</failOnError>
+                    <failOnWarnings>false</failOnWarnings>
+                    <doclint>all,-missing</doclint>
+                    <doctitle>Core Banking API ${project.version} Documentation</doctitle>
+                    <windowtitle>Core Banking API</windowtitle>
+                    <bottom>
+                        Copyright &#169; 2024 Core Banking API. All rights reserved.
+                    </bottom>
+                    <links>
+                        <link>https://docs.oracle.com/en/java/javase/21/docs/api/</link>
+                        <link>https://docs.spring.io/spring-framework/docs/current/javadoc-api/</link>
+                    </links>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

@@ -1,0 +1,15 @@
+com.bank.core
+com.bank.core.application.service
+com.bank.core.application.port.out
+com.bank.core.application.port.in
+com.bank.core.infrastructure.out.cache
+com.bank.core.infrastructure.out.persistence.repository
+com.bank.core.infrastructure.out.persistence.entity
+com.bank.core.infrastructure.out.persistence
+com.bank.core.infrastructure.out.messaging
+com.bank.core.infrastructure.config
+com.bank.core.infrastructure.in.web.dto
+com.bank.core.infrastructure.in.web
+com.bank.core.infrastructure.in.amqp
+com.bank.core.domain.model
+com.bank.core.domain.exception

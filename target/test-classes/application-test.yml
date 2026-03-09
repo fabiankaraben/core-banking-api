@@ -1,0 +1,27 @@
+spring:
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+banking:
+  idempotency:
+    ttl-hours: 1
+  outbox:
+    relay:
+      fixed-delay-ms: 1000
+  rabbitmq:
+    exchange: banking.events
+    queue:
+      notification: notification.queue
+      fraud-check: fraud-check.queue
+    routing-key:
+      transaction-completed: transaction.completed
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
