@@ -320,6 +320,11 @@ curl -X POST http://localhost:8080/api/v1/accounts \
 ```
 *(Copy the generated `id` from the response for the transfer)*
 
+### 1.1 Check Account Balance (Optional)
+```bash
+curl -X GET http://localhost:8080/api/v1/accounts/<SOURCE_ID>
+```
+
 ### 2. Create a Destination Account
 ```bash
 curl -X POST http://localhost:8080/api/v1/accounts \
@@ -331,6 +336,11 @@ curl -X POST http://localhost:8080/api/v1/accounts \
   }'
 ```
 *(Copy the generated `id` from the response for the transfer)*
+
+### 2.1 Check Account Balance (Optional)
+```bash
+curl -X GET http://localhost:8080/api/v1/accounts/<DEST_ID>
+```
 
 ### 3. Perform a Successful Transfer
 Replace `<SOURCE_ID>` and `<DEST_ID>` with the IDs from steps 1 and 2.
@@ -443,16 +453,16 @@ To generate and attach the Javadoc JAR alongside the application JAR:
 
 ## Design Decisions
 
-**Why Hexagonal Architecture?**
+**Why Hexagonal Architecture?**  
 The domain and application layers are completely free of framework annotations. This makes business logic testable in pure unit tests with no Spring context, minimises coupling, and lets the infrastructure be swapped (e.g. replacing Redis with Memcached) without touching business code.
 
-**Why the Transactional Outbox Pattern instead of direct RabbitMQ publishing?**
+**Why the Transactional Outbox Pattern instead of direct RabbitMQ publishing?**  
 Publishing a message inside a database transaction creates a dual-write problem: if the broker is unavailable at commit time, the database record exists but the message is lost. The outbox table is written atomically with the business data, and the relay scheduler handles delivery with automatic retry — guaranteeing at-least-once delivery.
 
-**Why Optimistic Locking + Pessimistic Write Lock?**
+**Why Optimistic Locking + Pessimistic Write Lock?**  
 The `@Version` optimistic lock is the primary guard; it ensures stale reads in the JPA session are rejected. The `SELECT FOR UPDATE` pessimistic lock is applied when loading accounts for a transfer to prevent two concurrent sessions from reading the same balance and both attempting a debit.
 
-**Why Java 21 Virtual Threads?**
+**Why Java 21 Virtual Threads?**  
 Banking APIs are I/O-bound: every request involves multiple database round-trips, Redis lookups, and potential AMQP operations. Virtual Threads allow each request to block on I/O without consuming a platform thread, achieving high throughput without reactive programming complexity.
 
 ---

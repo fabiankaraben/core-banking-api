@@ -9,7 +9,7 @@ CREATE TABLE accounts (
     id          UUID            NOT NULL,
     customer_id UUID            NOT NULL,
     balance     NUMERIC(19, 4)  NOT NULL,
-    currency    CHAR(3)         NOT NULL,
+    currency    VARCHAR(3)      NOT NULL,
     status      VARCHAR(10)     NOT NULL DEFAULT 'ACTIVE',
     version     BIGINT          NOT NULL DEFAULT 0,
     created_at  TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
